@@ -19,7 +19,7 @@ BLUE = (0,0,255)
 
 # Global variable that controls the speed of the recursion automation, in seconds
 #
-PAUSE = 0.25
+PAUSE = 0.5
 
 #
 # This is the class you have to complete.
@@ -68,87 +68,91 @@ class ConvexHullSolver(QObject):
 		slope = (rightPoint.y() - leftPoint.y()) / (rightPoint.x() - leftPoint.x())
 		return slope
 
-	def increase_left_tan(self, leftHull, upperLeft, upperRight, iter):
-		currSlope = self.get_slope(upperLeft, upperRight)
-		newSlope = currSlope
-		if (iter < len(leftHull)):
-			newSlope = self.get_slope(leftHull[-iter], upperRight)
-		if (newSlope < currSlope):
-			return leftHull[-iter]
-		else:
-			return upperLeft
+	def increase_left_tan(self, leftHull, rightHull, upperLeft, upperRight):
+		currSlope = self.get_slope(leftHull[upperLeft], rightHull[upperRight])
+		newTan = upperLeft
+		for i in range(len(leftHull)):
+			if upperLeft - i >= 0:
+				newSlope = self.get_slope(leftHull[upperLeft - i], rightHull[upperRight])
+			if (newSlope < currSlope):
+				currSlope = newSlope
+				newTan = upperLeft - i
+		return newTan
 
-	def increase_right_tan(self, upperLeft, rightHull, upperRight, iter):
-		currSlope = self.get_slope(upperLeft, upperRight)
-		newSlope = currSlope
-		if (iter < len(rightHull)):
-			newSlope = self.get_slope(upperLeft, rightHull[iter])
-		if (newSlope > currSlope):
-			return rightHull[iter]
-		else:
-			return upperRight
+	def increase_right_tan(self, leftHull, rightHull, upperLeft, upperRight):
+		currSlope = self.get_slope(leftHull[upperLeft], rightHull[upperRight])
+		newTan = upperRight
+		for i in range(len(rightHull)):
+			if upperRight + i < len(rightHull):
+				newSlope = self.get_slope(leftHull[upperLeft], rightHull[upperRight + i])
+			if (newSlope > currSlope):
+				currSlope = newSlope
+				newTan = upperRight + i
+		return newTan
 
-	def decrease_left_tan(self, leftHull, lowerLeft, lowerRight, iter):
-		currSlope = self.get_slope(lowerLeft, lowerRight)
-		newSlope = currSlope
-		if (iter < len(leftHull)):
-			newSlope = self.get_slope(leftHull[iter], lowerRight)
-		if (newSlope > currSlope):
-			return leftHull[iter]
-		else:
-			return lowerLeft
+	def decrease_left_tan(self, leftHull, rightHull, lowerLeft, lowerRight):
+		currSlope = self.get_slope(leftHull[lowerLeft], rightHull[lowerRight])
+		newTan = lowerLeft
+		for i in range(len(leftHull)):
+			if lowerLeft + i < len(leftHull):
+				newSlope = self.get_slope(leftHull[lowerLeft + i], rightHull[lowerRight])
+			if (newSlope > currSlope):
+				currSlope = newSlope
+				newTan = lowerLeft + i
+		return newTan
 
-	def decrease_right_tan(self, lowerLeft, rightHull, lowerRight, iter):
-		currSlope = self.get_slope(lowerLeft, lowerRight)
-		newSlope = currSlope
-		if (iter < len(rightHull)):
-			newSlope = self.get_slope(lowerLeft, rightHull[-iter])
-		if (newSlope < currSlope):
-			return rightHull[iter]
-		else:
-			return lowerRight
+	def decrease_right_tan(self, leftHull, rightHull, lowerLeft, lowerRight):
+		currSlope = self.get_slope(leftHull[lowerLeft], rightHull[lowerRight])
+		newTan = lowerRight
+		for i in range(len(rightHull)):
+			if lowerRight + i <= len(rightHull):
+				newSlope = self.get_slope(leftHull[lowerLeft], rightHull[-(lowerRight + i)])
+			if (newSlope < currSlope):
+				currSlope = newSlope
+				newTan = lowerRight + i
+		return newTan
 
 	def find_upper_tangent(self, leftHull, rightHull):
-		rightmostFromLeft = leftHull[0]
+		rightmostFromLeft = 0
 		for i in range(len(leftHull)):
-			if leftHull[i].x() > rightmostFromLeft.x():
-				rightmostFromLeft = leftHull[i]
-		leftmostFromRight = rightHull[0]
+			if leftHull[i].x() > leftHull[rightmostFromLeft].x():
+				rightmostFromLeft = i
+		leftmostFromRight = 0
 		upperLeft = rightmostFromLeft
 		upperRight = leftmostFromRight
-		i = 1
+
 		while True:
 			prevUpperLeft = upperLeft
 			prevUpperRight = upperRight
-			upperLeft = self.increase_left_tan(leftHull, upperLeft, upperRight, i)
-			upperRight = self.increase_right_tan(upperLeft, rightHull, upperRight, i)
+			upperLeft = self.increase_left_tan(leftHull, rightHull, upperLeft, upperRight)
+			upperRight = self.increase_right_tan(leftHull, rightHull, upperLeft, upperRight)
 			if (prevUpperLeft == upperLeft and prevUpperRight == upperRight):
 				break
-			i += 1
-		UpTanLine = QLineF(upperLeft, upperRight)
-		self.blinkTangent([UpTanLine], BLUE)
-		return upperLeft, upperRight
+
+		upTanLine = QLineF(leftHull[upperLeft], rightHull[upperRight])
+		self.blinkTangent([upTanLine], BLUE)
+		return leftHull[upperLeft], rightHull[upperRight]
 
 	def find_lower_tangent(self, leftHull, rightHull):
-		rightmostFromLeft = leftHull[0]
+		rightmostFromLeft = 0
 		for i in range(len(leftHull)):
-			if leftHull[i].x() > rightmostFromLeft.x():
-				rightmostFromLeft = leftHull[i]
-		leftmostFromRight = rightHull[0]
+			if leftHull[i].x() > leftHull[rightmostFromLeft].x():
+				rightmostFromLeft = i
+		leftmostFromRight = 0
 		lowerLeft = rightmostFromLeft
 		lowerRight = leftmostFromRight
-		i = 1
+
 		while True:
 			prevLowerLeft = lowerLeft
 			prevLowerRight = lowerRight
-			lowerLeft = self.decrease_left_tan(leftHull, lowerLeft, lowerRight, i)
-			lowerRight = self.decrease_right_tan(lowerLeft, rightHull, lowerRight, i)
+			lowerLeft = self.decrease_left_tan(leftHull, rightHull, lowerLeft, lowerRight)
+			lowerRight = self.decrease_right_tan(leftHull, rightHull, lowerLeft, lowerRight)
 			if (prevLowerLeft == lowerLeft and prevLowerRight == lowerRight):
 				break
-			i += 1
-		BotTanLine = QLineF(lowerLeft, lowerRight)
-		self.blinkTangent([BotTanLine], GREEN)
-		return lowerLeft, lowerRight
+
+		botTanLine = QLineF(leftHull[lowerLeft], rightHull[lowerRight])
+		self.blinkTangent([botTanLine], GREEN)
+		return leftHull[lowerLeft], rightHull[lowerRight]
 
 
 	def merge_hulls(self, leftHull, rightHull):
@@ -189,7 +193,7 @@ class ConvexHullSolver(QObject):
 
 		hull = self.merge_hulls(leftPoints, rightPoints)
 		showHull = [QLineF(hull[i],hull[(i+1)%len(hull)]) for i in range(len(hull))]
-		self.showHull(showHull, GREEN)
+		self.showHull(showHull, RED)
 		return hull
 
 
