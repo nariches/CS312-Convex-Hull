@@ -1,6 +1,4 @@
-Framework: Download the provided framework which allows you to focus on the primary tasks of the project. In the framework you will find:
-1. A Graphical User Interface that generates a specified number of random points (see image above). The software has been built so that no two points should have the same x value, though there could be duplicate y values. This makes life easier, as otherwise you would have to make sure your software deals with duplicate x value points. The GUI is provided in the file Proj2GUI.py.
-2. A hook (the "Solve" button) which calls the method that you will implement. In the file convex_hull.py, you will find three parts of the compute_hull() method that you need to implement. First, you will need to sort the list of points (QPointF objects) by ascending x-value. Next you will implement your divide and conquer convex hull algorithm (you may create other methods and/or classes if you wish to do this). Last, you will pass a list of QLineF objects representing the segments of the convex hull to the GUI for display (see "dummy" example provided with the code).
+Divide and Conquer algorithm to find the convex hull of a given set of points. Written for CS 312 at Brigham Young University
 
 Instructions:
 1. Write the full, unambiguous pseudo-code for your divide-and-conquer algorithm for finding the convex hull of a set of points Q. Your implemented algorithm must be the nlogn algorithm we presented in class and in the slides. Be sure to label the parts of your algorithm. Also, label each part with its worst-case time efficiency.
